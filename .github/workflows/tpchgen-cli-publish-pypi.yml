@@ -24,7 +24,7 @@ jobs:
       attestations: write # Used to generate artifact attestation
     steps:
       - name: Download all build artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           pattern: '*'
           merge-multiple: true
