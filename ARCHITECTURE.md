@@ -13,7 +13,7 @@ The `tpchgen` crate is designed to be embeddable in as many locations as
 possible and thus has no dependencies by design. For example, it does
 not depend on arrow or parquet crates or display libraries.
 
-`tpchgen-arrow` is similarly designe to be embeddable with minimal dependencies
+`tpchgen-arrow` is similarly designed to be embeddable with minimal dependencies
 and only depends on the [`arrow` crate](https://docs.rs/arrow)
 
 The `tpchgen-cli` crate is designed to include many useful features, and thus
