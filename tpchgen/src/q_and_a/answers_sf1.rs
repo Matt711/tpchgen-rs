@@ -19897,8 +19897,8 @@ revenue
 3083843.06
 "#;
 
+// typos:off
 /// TPC-H Potential Part Promotion Answer (Q20).
-/// typos:off
 pub const Q20_ANSWER: &str = r#"
 s_name                   |s_address                               
 Supplier#000000020       |iybAE,RmTymrZVYaFZva2SH,j               
@@ -20088,7 +20088,7 @@ Supplier#000009846       |57sNwJJ3PtBDu,hMPP5QvpcOcSNRXn3PypJJrh
 Supplier#000009899       |7XdpAHrzr1t,UQFZE                       
 Supplier#000009974       |7wJ,J5DKcxSU4Kp1cQLpbcAvB5AsvKT         
 "#;
-/// typos:on
+// typos:on
 
 /// TPC-H Suppliers Who Kept Orders Waiting Answer (Q21).
 pub const Q21_ANSWER: &str = r#"
