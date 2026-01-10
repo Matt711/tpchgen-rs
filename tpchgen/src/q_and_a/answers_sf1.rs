@@ -16,7 +16,6 @@ N              |O              |74476040.00|111701729697.74|106118230307.61|1103
 R              |F              |37719753.00|56568041380.90 |53741292684.60 |55889619119.83 |25.51  |38250.85 |0.05    |1478870
 "#;
 
-// typos:off
 /// TPC-H Minimum Cost Supplier Answer (Q2).
 pub const Q2_ANSWER: &str = r#"
 s_acctbal     |s_name                   |n_name                   |p_partkey           |p_mfgr                   |s_address                               |s_phone        |s_comment                                                                                            
@@ -121,7 +120,6 @@ s_acctbal     |s_name                   |n_name                   |p_partkey    
 7850.66       |Supplier#000001518       |UNITED KINGDOM           |               86501|Manufacturer#1           |ONda3YJiHKJOC                           |33-730-383-3892|ifts haggle fluffily pending pai                                                                     
 7843.52       |Supplier#000006683       |FRANCE                   |               11680|Manufacturer#4           |2Z0JGkiv01Y00oCFwUGfviIbhzCdy           |16-464-517-8943| express, final pinto beans x-ray slyly asymptotes. unusual, unusual                                 
 "#;
-// typos:on
 
 /// TPC-H Shipping Priority Answer (Q3).
 pub const Q3_ANSWER: &str = r#"
@@ -360,7 +358,6 @@ VIETNAM                  |                1993|45352676.87
 VIETNAM                  |                1992|47846355.65
 "#;
 
-// typos:off
 /// TPC-H Returned Item Reporting Answer (Q10).
 pub const Q10_ANSWER: &str = r#"
 c_custkey           |c_name                   |revenue      |c_acctbal     |n_name                   |c_address                               |c_phone        |c_comment                                                                                                            
@@ -385,7 +382,6 @@ c_custkey           |c_name                   |revenue      |c_acctbal     |n_na
                52528|Customer#000052528       |556397.35    |551.79        |ARGENTINA                |NFztyTOR10UOJ                           |11-208-192-3205| deposits hinder. blithely pending asymptotes breach slyly regular re                                                
                23431|Customer#000023431       |554269.54    |3381.86       |ROMANIA                  |HgiV0phqhaIa9aydNoIlb                   |29-915-458-2654|nusual, even instructions: furiously stealthy n                                                                      
 "#;
-// typos:on
 
 /// TPC-H Important Stock Identification Answer (Q11).
 pub const Q11_ANSWER: &str = r#"
@@ -19897,7 +19893,6 @@ revenue
 3083843.06
 "#;
 
-// typos:off
 /// TPC-H Potential Part Promotion Answer (Q20).
 pub const Q20_ANSWER: &str = r#"
 s_name                   |s_address                               
@@ -20088,7 +20083,6 @@ Supplier#000009846       |57sNwJJ3PtBDu,hMPP5QvpcOcSNRXn3PypJJrh
 Supplier#000009899       |7XdpAHrzr1t,UQFZE                       
 Supplier#000009974       |7wJ,J5DKcxSU4Kp1cQLpbcAvB5AsvKT         
 "#;
-// typos:on
 
 /// TPC-H Suppliers Who Kept Orders Waiting Answer (Q21).
 pub const Q21_ANSWER: &str = r#"
