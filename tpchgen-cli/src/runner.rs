@@ -188,8 +188,8 @@ where
         OutputLocation::File(path) => {
             // if the output already exists, skip running
             if path.exists() {
-                eprintln!(
-                    "Warning: {} already exists, skipping generation",
+                println!(
+                    "Info: {} already exists, skipping generation",
                     path.display()
                 );
                 return Ok(());
@@ -225,8 +225,8 @@ where
         OutputLocation::File(path) => {
             // if the output already exists, skip running
             if path.exists() {
-                eprintln!(
-                    "Warning: {} already exists, skipping generation",
+                println!(
+                    "Info: {} already exists, skipping generation",
                     path.display()
                 );
                 return Ok(());

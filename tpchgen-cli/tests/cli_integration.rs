@@ -101,11 +101,11 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
         .assert()
         .success();
 
-    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
+    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
     assert!(
-        stderr.contains("Warning:") && stderr.contains("already exists, skipping generation"),
-        "Expected warning message not found in stderr: {}",
-        stderr
+        stdout.contains("Info:") && stdout.contains("already exists, skipping generation"),
+        "Expected info message not found in stdout: {}",
+        stdout
     );
 
     let new_metadata =
@@ -160,11 +160,11 @@ fn test_tpchgen_cli_parquet_no_overwrite() {
         .assert()
         .success();
 
-    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
+    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
     assert!(
-        stderr.contains("Warning:") && stderr.contains("already exists, skipping generation"),
-        "Expected warning message not found in stderr: {}",
-        stderr
+        stdout.contains("Info:") && stdout.contains("already exists, skipping generation"),
+        "Expected info message not found in stdout: {}",
+        stdout
     );
 
     let new_metadata =
