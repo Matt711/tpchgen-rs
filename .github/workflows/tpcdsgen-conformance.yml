@@ -63,7 +63,7 @@ jobs:
 
     - name: Upload test fixtures as artifacts
       if: failure()  # Upload fixtures if tests fail for debugging
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: test-fixtures
         path: tpcdsgen/tests/fixtures/
@@ -107,7 +107,7 @@ jobs:
         time ./target/release/tpcdsgen --scale 1 --directory /tmp/bench
 
     - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: benchmark-results
         path: /tmp/bench/
