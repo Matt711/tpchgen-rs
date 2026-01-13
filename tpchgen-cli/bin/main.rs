@@ -100,7 +100,7 @@ struct Cli {
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
 
-    /// Quiet mode - disable all logging output
+    /// Quiet mode - only show error-level logs
     #[arg(short, long, default_value_t = false)]
     quiet: bool,
 
@@ -176,8 +176,8 @@ impl Cli {
     async fn main(self) -> io::Result<()> {
         // Configure logging
         if self.quiet {
-            // Quiet mode: disable all logging
-            env_logger::builder().filter_level(LevelFilter::Off).init();
+            // Quiet mode: only show error-level logs
+            env_logger::builder().filter_level(LevelFilter::Error).init();
         } else if self.verbose {
             env_logger::builder().filter_level(LevelFilter::Info).init();
             info!("Verbose output enabled (ignoring RUST_LOG environment variable)");
