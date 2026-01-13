@@ -97,11 +97,11 @@ struct Cli {
     ///
     /// When specified, sets the log level to `info` and ignores the `RUST_LOG`
     /// environment variable. When not specified, uses `RUST_LOG`
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long, default_value_t = false, conflicts_with = "quiet")]
     verbose: bool,
 
     /// Quiet mode - only show error-level logs
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long, default_value_t = false, conflicts_with = "verbose")]
     quiet: bool,
 
     /// Write the output to stdout instead of a file.
