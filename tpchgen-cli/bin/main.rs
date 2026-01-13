@@ -104,6 +104,10 @@ struct Cli {
     #[arg(long, default_value_t = false)]
     stdout: bool,
 
+    /// Show progress bars during generation
+    #[arg(short = 'P', long, default_value_t = false)]
+    progress: bool,
+
     /// Target size in row group bytes in Parquet files
     ///
     /// Row groups are the typical unit of parallel processing and compression
@@ -200,7 +204,8 @@ impl Cli {
             .with_num_threads(self.num_threads)
             .with_parquet_compression(self.parquet_compression)
             .with_parquet_row_group_bytes(self.parquet_row_group_bytes)
-            .with_stdout(self.stdout);
+            .with_stdout(self.stdout)
+            .with_show_progress(self.progress);
 
         // Add tables if specified
         if let Some(tables) = self.tables {

@@ -31,6 +31,7 @@ pub mod generate;
 pub mod output_plan;
 pub mod parquet;
 pub mod plan;
+pub mod progress;
 pub mod runner;
 pub mod statistics;
 pub mod tbl;
@@ -89,7 +90,7 @@ impl IntoSize for BufWriter<File> {
 ///
 /// Represents the 8 tables in the TPC-H benchmark schema.
 /// Tables are ordered by size (smallest to largest at SF=1).
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Table {
     /// Nation table (25 rows)
     Nation,
@@ -234,6 +235,8 @@ pub struct GeneratorConfig {
     pub part: Option<i32>,
     /// Write output to stdout instead of files
     pub stdout: bool,
+    /// Show progress bars during generation
+    pub show_progress: bool,
 }
 
 impl Default for GeneratorConfig {
@@ -249,6 +252,7 @@ impl Default for GeneratorConfig {
             parts: None,
             part: None,
             stdout: false,
+            show_progress: false,
         }
     }
 }
@@ -388,7 +392,7 @@ impl TpchGenerator {
         info!("Created static distributions and text pools in {elapsed:?}");
 
         // Run
-        let runner = PlanRunner::new(output_plans, config.num_threads);
+        let runner = PlanRunner::new(output_plans, config.num_threads, config.show_progress);
         runner.run().await?;
         info!("Generation complete!");
         Ok(())
@@ -515,6 +519,12 @@ impl TpchGeneratorBuilder {
     /// Write output to stdout instead of files
     pub fn with_stdout(mut self, stdout: bool) -> Self {
         self.config.stdout = stdout;
+        self
+    }
+
+    /// Show progress bars during generation
+    pub fn with_show_progress(mut self, show_progress: bool) -> Self {
+        self.config.show_progress = show_progress;
         self
     }
 
