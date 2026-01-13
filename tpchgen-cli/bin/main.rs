@@ -104,7 +104,8 @@ struct Cli {
     #[arg(long, default_value_t = false)]
     stdout: bool,
 
-    /// Show progress bars during generation
+    /// Show progress bars during data generation
+    // -P (short form), -p already taken by --parts
     #[arg(short = 'P', long, default_value_t = false)]
     progress: bool,
 
