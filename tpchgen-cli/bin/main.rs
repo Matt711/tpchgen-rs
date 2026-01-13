@@ -100,7 +100,7 @@ struct Cli {
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
 
-    /// Quiet mode - disable all stdout output
+    /// Quiet mode - disable all logging output
     #[arg(short, long, default_value_t = false)]
     quiet: bool,
 
