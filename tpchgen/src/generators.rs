@@ -2317,7 +2317,9 @@ mod tests {
         // Check first customer
         let first = &customers[0];
         assert_eq!(first.c_custkey, 1);
+        // typos:off
         assert_eq!(first.to_string(), "1|Customer#000000001|IVhzIApeRb ot,c,E|15|25-989-741-2988|711.56|BUILDING|to the even, regular platelets. regular, ironic epitaphs nag e|");
+        // typos:on
 
         // Check market segment distribution
         let market_segments: std::collections::HashSet<_> =

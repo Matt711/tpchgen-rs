@@ -210,7 +210,7 @@ specifications:
 
 Here are the commands we used to configure the benchmarking machine:
 
-## Install Softare
+## Install Software
 ```shell
 # install required packages
 sudo apt-get install -y time g++ clang emacs git tmux mdadm make

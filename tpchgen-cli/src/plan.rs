@@ -543,7 +543,7 @@ mod tests {
                 .with_table(Table::Lineitem)
                 .with_format(OutputFormat::Tbl)
                 .with_scale_factor(1.0)
-                // Generate only part 1 of the lineitem table, but results in 10 partititions
+                // Generate only part 1 of the lineitem table, but results in 10 partitions
                 .with_cli_part(1)
                 .with_cli_part_count(10)
                 .assert(50, 1..=5)

@@ -523,6 +523,7 @@ mod tests {
             "verbs",
             "adjectives",
             "adverbs",
+            // P.S: The correct spelling is `auxiliaries` which is what we use.
             "auxillaries",
             "prepositions",
             "terminators",

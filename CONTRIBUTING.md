@@ -19,7 +19,8 @@ We actively welcome your pull requests.
 3. If you've changed APIs, update the documentation.
 4. Ensure the standard tests and conformance tests are passing.
 5. Make sure your code follows Rust best practices, address any linting issues clippy might find.
-6. Open your pull request and wait for a review and approval.book.com/cla>
+6. Run [typos](https://github.com/crate-ci/typos) locally to catch any spelling mistakes in your changes. For intentional exceptions in rust source files, use `// typos:off` and `// typos:on` comments.
+7. Open your pull request and wait for a review and approval.
 
 ## Issues
 

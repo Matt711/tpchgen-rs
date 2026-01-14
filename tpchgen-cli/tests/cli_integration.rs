@@ -72,27 +72,42 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
     let temp_dir = tempdir().expect("Failed to create temporary directory");
     let expected_file = temp_dir.path().join("part.tbl");
 
-    let run_command = || {
-        Command::cargo_bin("tpchgen-cli")
-            .expect("Binary not found")
-            .arg("--scale-factor")
-            .arg("0.001")
-            .arg("--tables")
-            .arg("part")
-            .arg("--output-dir")
-            .arg(temp_dir.path())
-            .assert()
-            .success()
-    };
+    // First run - create the file
+    Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .arg("--scale-factor")
+        .arg("0.001")
+        .arg("--tables")
+        .arg("part")
+        .arg("--output-dir")
+        .arg(temp_dir.path())
+        .assert()
+        .success();
 
-    run_command();
     let original_metadata =
         fs::metadata(&expected_file).expect("Failed to get metadata of generated file");
     assert_eq!(original_metadata.len(), 23498);
 
     // Run the tpchgen-cli command again with the same parameters and expect the
-    // file to not be overwritten
-    run_command();
+    // file to not be overwritten and a warning to be displayed
+    let output = Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .arg("--scale-factor")
+        .arg("0.001")
+        .arg("--tables")
+        .arg("part")
+        .arg("--output-dir")
+        .arg(temp_dir.path())
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
+    assert!(
+        stdout.contains("Info:") && stdout.contains("already exists, skipping generation"),
+        "Expected info message not found in stdout: {}",
+        stdout
+    );
+
     let new_metadata =
         fs::metadata(&expected_file).expect("Failed to get metadata of generated file");
     assert_eq!(original_metadata.len(), new_metadata.len());
@@ -112,29 +127,45 @@ fn test_tpchgen_cli_parquet_no_overwrite() {
     let temp_dir = tempdir().expect("Failed to create temporary directory");
     let expected_file = temp_dir.path().join("part.parquet");
 
-    let run_command = || {
-        Command::cargo_bin("tpchgen-cli")
-            .expect("Binary not found")
-            .arg("--scale-factor")
-            .arg("0.001")
-            .arg("--tables")
-            .arg("part")
-            .arg("--format")
-            .arg("parquet")
-            .arg("--output-dir")
-            .arg(temp_dir.path())
-            .assert()
-            .success()
-    };
+    // First run - create the file
+    Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .arg("--scale-factor")
+        .arg("0.001")
+        .arg("--tables")
+        .arg("part")
+        .arg("--format")
+        .arg("parquet")
+        .arg("--output-dir")
+        .arg(temp_dir.path())
+        .assert()
+        .success();
 
-    run_command();
     let original_metadata =
         fs::metadata(&expected_file).expect("Failed to get metadata of generated file");
     assert_eq!(original_metadata.len(), 12061);
 
     // Run the tpchgen-cli command again with the same parameters and expect the
-    // file to not be overwritten
-    run_command();
+    // file to not be overwritten and a warning to be displayed
+    let output = Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .arg("--scale-factor")
+        .arg("0.001")
+        .arg("--tables")
+        .arg("part")
+        .arg("--format")
+        .arg("parquet")
+        .arg("--output-dir")
+        .arg(temp_dir.path())
+        .assert()
+        .success();
+
+    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
+    assert!(
+        stdout.contains("Info:") && stdout.contains("already exists, skipping generation"),
+        "Expected info message not found in stdout: {}",
+        stdout
+    );
 
     let new_metadata =
         fs::metadata(&expected_file).expect("Failed to get metadata of generated file");

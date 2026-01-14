@@ -1,0 +1,16 @@
+[files]
+extend-exclude = [
+  "*.patch",
+  "*.dss",
+  "tpchgen/src/q_and_a/",
+]
+
+
+[default]
+extend-ignore-re = [
+  "(?s)```.*?```", # ignore code blocks in markdown
+  "(?s)//\\s*typos:off.*?//\\s*typos:on",
+]
+
+[default.extend-words]
+auxillaries = "auxillaries"

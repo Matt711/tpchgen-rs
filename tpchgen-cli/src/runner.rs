@@ -221,7 +221,10 @@ where
         OutputLocation::File(path) => {
             // if the output already exists, skip running
             if path.exists() {
-                info!("{} already exists, skipping generation", path.display());
+                println!(
+                    "Info: {} already exists, skipping generation",
+                    path.display()
+                );
                 return Ok(());
             }
             // write to a temp file and then rename to avoid partial files
@@ -255,7 +258,10 @@ where
         OutputLocation::File(path) => {
             // if the output already exists, skip running
             if path.exists() {
-                info!("{} already exists, skipping generation", path.display());
+                println!(
+                    "Info: {} already exists, skipping generation",
+                    path.display()
+                );
                 return Ok(());
             }
             // write to a temp file and then rename to avoid partial files
