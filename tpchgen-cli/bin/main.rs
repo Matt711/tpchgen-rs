@@ -108,9 +108,9 @@ struct Cli {
     #[arg(long, default_value_t = false)]
     stdout: bool,
 
-    /// Show progress bars during data generation
+    /// Show progress bars during data generation (shown by default, hidden with --quiet)
     // -P (short form), -p already taken by --parts
-    #[arg(short = 'P', long, default_value_t = false)]
+    #[arg(short = 'P', long, default_value_t = true)]
     progress: bool,
 
     /// Target size in row group bytes in Parquet files
@@ -262,7 +262,7 @@ impl Cli {
             .with_parquet_row_group_bytes(self.parquet_row_group_bytes)
             .with_stdout(self.stdout)
             .with_csv_delimiter(self.delimiter)
-            .with_show_progress(self.progress);
+            .with_show_progress(self.progress && !self.quiet);
 
         // Add tables if specified
         if let Some(tables) = self.tables {
