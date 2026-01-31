@@ -89,7 +89,7 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
     assert_eq!(original_metadata.len(), 23498);
 
     // Run the tpchgen-cli command again with the same parameters and expect the
-    // file to not be overwritten and a warning to be logged
+    // file to not be overwritten and an info message to be logged
     let output = Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
         .arg("--scale-factor")
@@ -98,13 +98,14 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
         .arg("part")
         .arg("--output-dir")
         .arg(temp_dir.path())
+        .arg("--verbose")
         .assert()
         .success();
 
     let stderr = String::from_utf8_lossy(&output.get_output().stderr);
     assert!(
         stderr.contains("already exists, skipping generation"),
-        "Expected warning message not found in stderr: {}",
+        "Expected skip message not found in stderr: {}",
         stderr
     );
 
@@ -146,7 +147,7 @@ fn test_tpchgen_cli_parquet_no_overwrite() {
     assert_eq!(original_metadata.len(), 12061);
 
     // Run the tpchgen-cli command again with the same parameters and expect the
-    // file to not be overwritten and a warning to be logged
+    // file to not be overwritten and an info message to be logged
     let output = Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
         .arg("--scale-factor")
@@ -157,13 +158,14 @@ fn test_tpchgen_cli_parquet_no_overwrite() {
         .arg("parquet")
         .arg("--output-dir")
         .arg(temp_dir.path())
+        .arg("--verbose")
         .assert()
         .success();
 
     let stderr = String::from_utf8_lossy(&output.get_output().stderr);
     assert!(
         stderr.contains("already exists, skipping generation"),
-        "Expected warning message not found in stderr: {}",
+        "Expected skip message not found in stderr: {}",
         stderr
     );
 
