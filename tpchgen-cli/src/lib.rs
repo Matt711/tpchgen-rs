@@ -235,6 +235,8 @@ pub struct GeneratorConfig {
     pub part: Option<i32>,
     /// Write output to stdout instead of files
     pub stdout: bool,
+    /// CSV delimiter character (only applies to CSV format)
+    pub csv_delimiter: char,
     /// Show progress bars during generation
     pub show_progress: bool,
 }
@@ -252,6 +254,7 @@ impl Default for GeneratorConfig {
             parts: None,
             part: None,
             stdout: false,
+            csv_delimiter: ',',
             show_progress: false,
         }
     }
@@ -376,6 +379,7 @@ impl TpchGenerator {
             config.parquet_row_group_bytes,
             config.stdout,
             config.output_dir,
+            config.csv_delimiter,
         );
 
         for table in tables {
@@ -519,6 +523,12 @@ impl TpchGeneratorBuilder {
     /// Write output to stdout instead of files
     pub fn with_stdout(mut self, stdout: bool) -> Self {
         self.config.stdout = stdout;
+        self
+    }
+
+    /// Set the CSV delimiter character (only applies to CSV format, default: ',')
+    pub fn with_csv_delimiter(mut self, delimiter: char) -> Self {
+        self.config.csv_delimiter = delimiter;
         self
     }
 

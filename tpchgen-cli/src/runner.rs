@@ -229,10 +229,7 @@ where
         OutputLocation::File(path) => {
             // if the output already exists, skip running
             if path.exists() {
-                println!(
-                    "Info: {} already exists, skipping generation",
-                    path.display()
-                );
+                log::warn!("{} already exists, skipping generation", path.display());
                 return Ok(());
             }
             // write to a temp file and then rename to avoid partial files
@@ -280,10 +277,7 @@ where
         OutputLocation::File(path) => {
             // if the output already exists, skip running
             if path.exists() {
-                println!(
-                    "Info: {} already exists, skipping generation",
-                    path.display()
-                );
+                log::warn!("{} already exists, skipping generation", path.display());
                 return Ok(());
             }
             // write to a temp file and then rename to avoid partial files
@@ -353,12 +347,13 @@ macro_rules! define_run {
             fn csv_sources(
                 generation_plan: &GenerationPlan,
                 scale_factor: f64,
+                delimiter: char,
             ) -> impl Iterator<Item: Source> + 'static {
                 generation_plan
                     .clone()
                     .into_iter()
                     .map(move |(part, num_parts)| $GENERATOR::new(scale_factor, part, num_parts))
-                    .map(<$CSV_SOURCE>::new)
+                    .map(move |gen| <$CSV_SOURCE>::new(gen, delimiter))
             }
 
             fn parquet_sources(
@@ -372,7 +367,7 @@ macro_rules! define_run {
                     .map(<$PARQUET_SOURCE>::new)
             }
 
-            // Dispach to the appropriate output format
+            // Dispatch to the appropriate output format
             let table = plan.table();
             match plan.output_format() {
                 OutputFormat::Tbl => {
@@ -380,7 +375,8 @@ macro_rules! define_run {
                     write_file(plan, num_threads, gens, _progress_tracker.clone(), table).await?
                 }
                 OutputFormat::Csv => {
-                    let gens = csv_sources(plan.generation_plan(), scale_factor);
+                    let delimiter = plan.csv_delimiter();
+                    let gens = csv_sources(plan.generation_plan(), scale_factor, delimiter);
                     write_file(plan, num_threads, gens, _progress_tracker.clone(), table).await?
                 }
                 OutputFormat::Parquet => {

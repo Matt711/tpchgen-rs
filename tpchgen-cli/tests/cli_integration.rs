@@ -89,7 +89,7 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
     assert_eq!(original_metadata.len(), 23498);
 
     // Run the tpchgen-cli command again with the same parameters and expect the
-    // file to not be overwritten and a warning to be displayed
+    // file to not be overwritten and a warning to be logged
     let output = Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
         .arg("--scale-factor")
@@ -101,11 +101,11 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
         .assert()
         .success();
 
-    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
+    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
     assert!(
-        stdout.contains("Info:") && stdout.contains("already exists, skipping generation"),
-        "Expected info message not found in stdout: {}",
-        stdout
+        stderr.contains("already exists, skipping generation"),
+        "Expected warning message not found in stderr: {}",
+        stderr
     );
 
     let new_metadata =
@@ -146,7 +146,7 @@ fn test_tpchgen_cli_parquet_no_overwrite() {
     assert_eq!(original_metadata.len(), 12061);
 
     // Run the tpchgen-cli command again with the same parameters and expect the
-    // file to not be overwritten and a warning to be displayed
+    // file to not be overwritten and a warning to be logged
     let output = Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
         .arg("--scale-factor")
@@ -160,13 +160,70 @@ fn test_tpchgen_cli_parquet_no_overwrite() {
         .assert()
         .success();
 
-    let stdout = String::from_utf8_lossy(&output.get_output().stdout);
+    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
     assert!(
-        stdout.contains("Info:") && stdout.contains("already exists, skipping generation"),
-        "Expected info message not found in stdout: {}",
-        stdout
+        stderr.contains("already exists, skipping generation"),
+        "Expected warning message not found in stderr: {}",
+        stderr
     );
 
+    let new_metadata =
+        fs::metadata(&expected_file).expect("Failed to get metadata of generated file");
+    assert_eq!(original_metadata.len(), new_metadata.len());
+    assert_eq!(
+        original_metadata
+            .modified()
+            .expect("Failed to get modified time"),
+        new_metadata
+            .modified()
+            .expect("Failed to get modified time")
+    );
+}
+
+/// Test that --quiet flag suppresses stdout output
+#[test]
+fn test_tpchgen_cli_quiet_flag() {
+    let temp_dir = tempdir().expect("Failed to create temporary directory");
+    let expected_file = temp_dir.path().join("part.tbl");
+
+    // First run - create the file
+    Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .arg("--scale-factor")
+        .arg("0.001")
+        .arg("--tables")
+        .arg("part")
+        .arg("--output-dir")
+        .arg(temp_dir.path())
+        .assert()
+        .success();
+
+    let original_metadata =
+        fs::metadata(&expected_file).expect("Failed to get metadata of generated file");
+    assert_eq!(original_metadata.len(), 23498);
+
+    // Run the tpchgen-cli command again with --quiet flag
+    // Expect the file to not be overwritten and NO warning even though warnings show by default
+    let output = Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .arg("--scale-factor")
+        .arg("0.001")
+        .arg("--tables")
+        .arg("part")
+        .arg("--output-dir")
+        .arg(temp_dir.path())
+        .arg("--quiet")
+        .assert()
+        .success();
+
+    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
+    assert!(
+        !stderr.contains("already exists"),
+        "Expected no warning message in stderr with --quiet flag, but found: {}",
+        stderr
+    );
+
+    // Verify file was not overwritten
     let new_metadata =
         fs::metadata(&expected_file).expect("Failed to get metadata of generated file");
     assert_eq!(original_metadata.len(), new_metadata.len());
@@ -568,14 +625,46 @@ async fn test_incompatible_options_warnings() {
         .arg("--parquet-row-group-bytes")
         .arg("8192")
         .assert()
-        // still success, but should see warnints
+        // still success, but should see warnings in stderr
         .success()
         .stderr(predicates::str::contains(
-            "Warning: Parquet compression option set but not generating Parquet files",
+            "Parquet compression option set but not generating Parquet files",
         ))
         .stderr(predicates::str::contains(
-            "Warning: Parquet row group size option set but not generating Parquet files",
+            "Parquet row group size option set but not generating Parquet files",
         ));
+}
+
+/// Test that --quiet flag suppresses warning messages
+#[tokio::test]
+async fn test_quiet_flag_suppresses_warnings() {
+    let output_dir = tempdir().unwrap();
+    let output = Command::cargo_bin("tpchgen-cli")
+        .expect("Binary not found")
+        .env("RUST_LOG", "warn")
+        .arg("--format")
+        .arg("csv")
+        .arg("--tables")
+        .arg("orders")
+        .arg("--scale-factor")
+        .arg("0.0001")
+        .arg("--output-dir")
+        .arg(output_dir.path())
+        // pass in parquet options that are incompatible with csv
+        .arg("--parquet-compression")
+        .arg("zstd(1)")
+        .arg("--parquet-row-group-bytes")
+        .arg("8192")
+        .arg("--quiet")
+        .assert()
+        .success();
+
+    let stderr = String::from_utf8_lossy(&output.get_output().stderr);
+    assert!(
+        !stderr.contains("Parquet"),
+        "Expected no warning messages in stderr with --quiet flag, but found: {}",
+        stderr
+    );
 }
 
 fn read_gzipped_file_to_string<P: AsRef<Path>>(path: P) -> Result<String, std::io::Error> {

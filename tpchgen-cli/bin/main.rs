@@ -97,8 +97,12 @@ struct Cli {
     ///
     /// When specified, sets the log level to `info` and ignores the `RUST_LOG`
     /// environment variable. When not specified, uses `RUST_LOG`
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long, default_value_t = false, conflicts_with = "quiet")]
     verbose: bool,
+
+    /// Quiet mode - only show error-level logs
+    #[arg(short, long, default_value_t = false, conflicts_with = "verbose")]
+    quiet: bool,
 
     /// Write the output to stdout instead of a file.
     #[arg(long, default_value_t = false)]
@@ -123,6 +127,39 @@ struct Cli {
     /// Typical values range from 10MB to 100MB.
     #[arg(long, default_value_t = DEFAULT_PARQUET_ROW_GROUP_BYTES)]
     parquet_row_group_bytes: i64,
+
+    /// CSV delimiter character (default: ',')
+    ///
+    /// Specifies the delimiter character to use when generating CSV files.
+    /// This option only applies to CSV format and cannot be used with TBL format.
+    ///
+    /// Supports escape sequences: \t (tab), \n (newline), \r (carriage return), \\ (backslash)
+    /// Common delimiters: ',' (comma), '|' (pipe), '\t' (tab), ';' (semicolon)
+    #[arg(long, default_value = ",", value_parser = parse_delimiter)]
+    delimiter: char,
+}
+
+/// Parse a delimiter string, handling escape sequences
+fn parse_delimiter(s: &str) -> Result<char, String> {
+    // Handle common escape sequences
+    let parsed = match s {
+        "\\t" => '\t',
+        "\\n" => '\n',
+        "\\r" => '\r',
+        "\\\\" => '\\',
+        _ => {
+            // If it's not an escape sequence, it should be a single character
+            let chars: Vec<char> = s.chars().collect();
+            if chars.len() != 1 {
+                return Err(format!(
+                    "Delimiter must be a single character or escape sequence (\\t, \\n, \\r, \\\\), got: '{}'",
+                    s
+                ));
+            }
+            chars[0]
+        }
+    };
+    Ok(parsed)
 }
 
 // TableValueParser is CLI-specific and uses the Table type from the library
@@ -176,25 +213,43 @@ impl Cli {
     /// Main function to run the generation
     async fn main(self) -> io::Result<()> {
         // Configure logging
-        if self.verbose {
+        if self.quiet {
+            // Quiet mode: only show error-level logs
+            env_logger::builder()
+                .filter_level(LevelFilter::Error)
+                .init();
+        } else if self.verbose {
             env_logger::builder().filter_level(LevelFilter::Info).init();
             info!("Verbose output enabled (ignoring RUST_LOG environment variable)");
         } else {
-            env_logger::init();
+            // Default: show warnings and errors, but respect RUST_LOG if set
+            env_logger::builder()
+                .filter_level(LevelFilter::Warn)
+                .parse_default_env()
+                .init();
         }
 
         // Warn if parquet specific options are set but not generating parquet
         if self.format != OutputFormat::Parquet {
             if self.parquet_compression != Compression::SNAPPY {
-                eprintln!(
-                    "Warning: Parquet compression option set but not generating Parquet files"
-                );
+                log::warn!("Parquet compression option set but not generating Parquet files");
             }
             if self.parquet_row_group_bytes != DEFAULT_PARQUET_ROW_GROUP_BYTES {
-                eprintln!(
-                    "Warning: Parquet row group size option set but not generating Parquet files"
-                );
+                log::warn!("Parquet row group size option set but not generating Parquet files");
             }
+        }
+
+        // Validate delimiter usage
+        if self.format == OutputFormat::Tbl && self.delimiter != ',' {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "The --delimiter option cannot be used with --format=tbl. TBL format uses the TPC-H standard pipe delimiter."
+            ));
+        }
+
+        // Warn if delimiter is set but not generating CSV
+        if self.format != OutputFormat::Csv && self.delimiter != ',' {
+            eprintln!("Warning: Delimiter option set but not generating CSV files");
         }
 
         // Build the generator using the library API
@@ -206,6 +261,7 @@ impl Cli {
             .with_parquet_compression(self.parquet_compression)
             .with_parquet_row_group_bytes(self.parquet_row_group_bytes)
             .with_stdout(self.stdout)
+            .with_csv_delimiter(self.delimiter)
             .with_show_progress(self.progress);
 
         // Add tables if specified

@@ -2,6 +2,7 @@
 extend-exclude = [
   "*.patch",
   "*.dss",
+  "*.dst",
   "tpchgen/src/q_and_a/",
 ]
 
