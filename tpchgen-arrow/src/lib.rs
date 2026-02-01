@@ -44,6 +44,10 @@ mod partsupp;
 mod region;
 mod supplier;
 
+// Parquet writing support (CPU always available, GPU when cudf feature enabled)
+#[cfg(any(feature = "cudf", feature = "parquet"))]
+pub mod parquet;
+
 use arrow::array::RecordBatch;
 use arrow::datatypes::SchemaRef;
 pub use customer::CustomerArrow;

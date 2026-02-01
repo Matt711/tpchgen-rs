@@ -8,9 +8,19 @@ repository = "https://github.com/clflushopt/tpchgen-rs"
 readme = "README.md"
 license = "Apache-2.0"
 
+[features]
+default = ["parquet"]
+# Enable Parquet writing support (CPU-only)
+parquet = ["dep:parquet"]
+# Enable GPU-accelerated Parquet writing via libcudf (implies parquet)
+cudf = ["arrow/ffi", "parquet"]
+
 [dependencies]
 arrow = { version = "57.1", default-features = false, features = ["prettyprint"] }
 tpchgen = { path = "../tpchgen", version = "2.0.2" }
+
+# Optional dependencies for Parquet writing
+parquet = { version = "57.1", default-features = false, features = ["arrow", "snap"], optional = true }
 
 [dev-dependencies]
 arrow-csv = "57.1"

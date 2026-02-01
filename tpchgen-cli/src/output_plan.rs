@@ -52,6 +52,8 @@ pub struct OutputPlan {
     generation_plan: GenerationPlan,
     /// CSV delimiter character
     csv_delimiter: char,
+    /// Use GPU-accelerated Parquet writing
+    use_gpu: bool,
 }
 
 impl OutputPlan {
@@ -63,6 +65,7 @@ impl OutputPlan {
         output_location: OutputLocation,
         generation_plan: GenerationPlan,
         csv_delimiter: char,
+        use_gpu: bool,
     ) -> Self {
         Self {
             table,
@@ -72,6 +75,7 @@ impl OutputPlan {
             output_location,
             generation_plan,
             csv_delimiter,
+            use_gpu,
         }
     }
 
@@ -115,6 +119,11 @@ impl OutputPlan {
     pub fn csv_delimiter(&self) -> char {
         self.csv_delimiter
     }
+
+    /// Return whether to use GPU-accelerated Parquet writing
+    pub fn use_gpu(&self) -> bool {
+        self.use_gpu
+    }
 }
 
 impl Display for OutputPlan {
@@ -139,6 +148,7 @@ pub struct OutputPlanGenerator {
     stdout: bool,
     output_dir: PathBuf,
     csv_delimiter: char,
+    use_gpu: bool,
     /// The generated output plans
     output_plans: Vec<OutputPlan>,
     /// Output directories that have been created so far
@@ -155,6 +165,7 @@ impl OutputPlanGenerator {
         stdout: bool,
         output_dir: PathBuf,
         csv_delimiter: char,
+        use_gpu: bool,
     ) -> Self {
         Self {
             format,
@@ -164,6 +175,7 @@ impl OutputPlanGenerator {
             stdout,
             output_dir,
             csv_delimiter,
+            use_gpu,
             output_plans: Vec::new(),
             created_directories: HashSet::new(),
         }
@@ -221,6 +233,7 @@ impl OutputPlanGenerator {
             output_location,
             generation_plan,
             self.csv_delimiter,
+            self.use_gpu,
         );
 
         self.output_plans.push(plan);

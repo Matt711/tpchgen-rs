@@ -225,7 +225,24 @@ where
                 log::warn!("{} already exists, skipping generation", path.display());
                 return Ok(());
             }
-            // write to a temp file and then rename to avoid partial files
+
+            // Use GPU writer if requested and available
+            #[cfg(feature = "cudf")]
+            if plan.use_gpu() {
+                use crate::parquet::generate_parquet_gpu;
+                // write to a temp file and then rename to avoid partial files
+                let temp_path = path.with_extension("inprogress");
+                generate_parquet_gpu(&temp_path, sources, num_threads).await?;
+                // rename the temp file to the final path
+                std::fs::rename(&temp_path, path).map_err(|e| {
+                    io::Error::other(format!(
+                        "Failed to rename {temp_path:?} to {path:?} file: {e}"
+                    ))
+                })?;
+                return Ok(());
+            }
+
+            // Fall back to CPU writer
             let temp_path = path.with_extension("inprogress");
             let file = std::fs::File::create(&temp_path).map_err(|err| {
                 io::Error::other(format!("Failed to create {temp_path:?}: {err}"))
@@ -292,12 +309,14 @@ macro_rules! define_run {
             fn parquet_sources(
                 generation_plan: &GenerationPlan,
                 scale_factor: f64,
+                batch_size: usize,
             ) -> impl Iterator<Item: RecordBatchIterator> + 'static {
                 generation_plan
                     .clone()
                     .into_iter()
                     .map(move |(part, num_parts)| $GENERATOR::new(scale_factor, part, num_parts))
                     .map(<$PARQUET_SOURCE>::new)
+                    .map(move |gen| gen.with_batch_size(batch_size))
             }
 
             // Dispatch to the appropriate output format
@@ -312,7 +331,13 @@ macro_rules! define_run {
                     write_file(plan, num_threads, gens).await?
                 }
                 OutputFormat::Parquet => {
-                    let gens = parquet_sources(plan.generation_plan(), scale_factor);
+                    // Use large batch size for GPU (8M rows), default for CPU (8K rows)
+                    let batch_size = if plan.use_gpu() {
+                        8_000_000
+                    } else {
+                        tpchgen_arrow::DEFAULT_BATCH_SIZE
+                    };
+                    let gens = parquet_sources(plan.generation_plan(), scale_factor, batch_size);
                     write_parquet(plan, num_threads, gens).await?
                 }
             };

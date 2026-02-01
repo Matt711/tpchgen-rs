@@ -13,8 +13,14 @@ use parquet::schema::types::SchemaDescPtr;
 use std::io;
 use std::io::Write;
 use std::sync::Arc;
+
+#[cfg(feature = "cudf")]
+use std::path::Path;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tpchgen_arrow::RecordBatchIterator;
+
+#[cfg(feature = "cudf")]
+use tpchgen_arrow::parquet::create_parquet_writer;
 
 pub trait IntoSize {
     /// Convert the object into a size
@@ -165,4 +171,136 @@ where
         .into_iter()
         .map(|col_writer| col_writer.close().unwrap())
         .collect()
+}
+
+/// GPU-accelerated Parquet generation using libcudf
+///
+/// This function writes Parquet files using GPU acceleration via libcudf's
+/// chunked writer. It generates data in parallel on CPU (like the CPU version)
+/// then streams batches to GPU for writing.
+///
+/// # Note
+/// Only available when the `cudf` feature is enabled.
+#[cfg(feature = "cudf")]
+pub async fn generate_parquet_gpu<I>(
+    path: impl AsRef<Path>,
+    iter_iter: I,
+    num_threads: usize,
+) -> Result<(), io::Error>
+where
+    I: Iterator<Item: RecordBatchIterator> + 'static,
+{
+    use arrow::array::RecordBatch;
+    use tokio::sync::mpsc::{Receiver, Sender};
+
+    use std::time::Instant;
+
+    debug!("Generating Parquet using GPU (libcudf) with {num_threads} parallel data generation threads");
+    let start_total = Instant::now();
+
+    let mut iter_iter = iter_iter.peekable();
+
+    // Get schema from the first iterator
+    let Some(first_iter) = iter_iter.peek() else {
+        return Ok(()); // no data
+    };
+    let schema = Arc::clone(first_iter.schema());
+
+    // Create a channel for sending batches to the writer task
+    // Use larger buffer to avoid blocking parallel generators
+    let (tx, mut rx): (Sender<RecordBatch>, Receiver<RecordBatch>) =
+        tokio::sync::mpsc::channel(num_threads * 2);
+
+    // Spawn blocking task that owns the GPU writer
+    let path_owned = path.as_ref().to_path_buf();
+    let schema_clone = Arc::clone(&schema);
+    let writer_task = tokio::task::spawn_blocking(move || {
+        use std::time::Instant;
+
+        let start_writer = Instant::now();
+        // Create GPU writer with 24GB RMM pool (leave 8GB for system)
+        let mut writer = create_parquet_writer(
+            &path_owned,
+            schema_clone,
+            true, // use_gpu
+            Some(24 * 1024 * 1024 * 1024),
+        )?;
+        let writer_init_time = start_writer.elapsed();
+        debug!("GPU writer initialized in {writer_init_time:?}");
+
+        // Write all batches we receive
+        let mut write_count = 0;
+        let start_writing = Instant::now();
+        while let Some(batch) = rx.blocking_recv() {
+            writer.write(&batch)?;
+            write_count += 1;
+        }
+        let writing_time = start_writing.elapsed();
+        debug!("Wrote {write_count} batches in {writing_time:?}");
+
+        // Close the writer
+        let start_close = Instant::now();
+        Box::new(writer).close()?;
+        let close_time = start_close.elapsed();
+        debug!("GPU writer closed in {close_time:?}");
+
+        Ok(()) as Result<(), io::Error>
+    });
+
+    // Generate batches in parallel and stream to GPU writer
+    let start_gen = Instant::now();
+    debug!("Starting parallel batch generation with {} threads", num_threads);
+
+    let stream = futures::stream::iter(iter_iter.enumerate())
+        .map(|(chunk_idx, iter)| {
+            let tx = tx.clone();
+            // Generate batches for each chunk in parallel
+            tokio::task::spawn_blocking(move || {
+                debug!("Chunk {} starting generation", chunk_idx);
+                let mut count = 0;
+                let mut rows = 0;
+                for batch in iter {
+                    rows += batch.num_rows();
+                    count += 1;
+                    if tx.blocking_send(batch).is_err() {
+                        debug!("Chunk {} send failed", chunk_idx);
+                        break;
+                    }
+                }
+                debug!("Chunk {} completed: {} batches, {} rows", chunk_idx, count, rows);
+                (count, rows)
+            })
+        })
+        .buffered(num_threads); // Use buffered, not buffer_unordered
+
+    // Drive the stream to completion
+    let mut batch_count = 0;
+    let mut total_rows = 0;
+    {
+        futures::pin_mut!(stream);
+        while let Some(result) = stream.next().await {
+            let (count, rows) = result.expect("Task panicked");
+            batch_count += count;
+            total_rows += rows;
+        }
+        debug!("Stream completed, dropping stream to release tx clones");
+    } // stream is dropped here, releasing all tx clones
+
+    let gen_time = start_gen.elapsed();
+    debug!("Generated {batch_count} batches ({total_rows} rows) in {gen_time:?}");
+
+    // Explicitly drop tx to signal writer we're done
+    debug!("Dropping tx to signal EOF to writer");
+    drop(tx);
+    debug!("tx dropped, waiting for writer to complete");
+
+    let start_write_wait = Instant::now();
+    // Wait for writer task to finish
+    writer_task.await??;
+    let write_wait_time = start_write_wait.elapsed();
+
+    let total_time = start_total.elapsed();
+    debug!("GPU writing: generation={gen_time:?}, write_wait={write_wait_time:?}, total={total_time:?}");
+
+    Ok(())
 }

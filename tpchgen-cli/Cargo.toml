@@ -9,6 +9,11 @@ homepage = { workspace = true }
 license = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = []
+# Enable GPU-accelerated Parquet writing via libcudf
+cudf = ["tpchgen-arrow/cudf"]
+
 [lib]
 name = "tpchgen_cli"
 path = "src/lib.rs"

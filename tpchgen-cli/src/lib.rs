@@ -236,6 +236,8 @@ pub struct GeneratorConfig {
     pub stdout: bool,
     /// CSV delimiter character (only applies to CSV format)
     pub csv_delimiter: char,
+    /// Use GPU-accelerated Parquet writing (requires cudf feature)
+    pub use_gpu: bool,
 }
 
 impl Default for GeneratorConfig {
@@ -252,6 +254,7 @@ impl Default for GeneratorConfig {
             part: None,
             stdout: false,
             csv_delimiter: ',',
+            use_gpu: false,
         }
     }
 }
@@ -376,6 +379,7 @@ impl TpchGenerator {
             config.stdout,
             config.output_dir,
             config.csv_delimiter,
+            config.use_gpu,
         );
 
         for table in tables {
@@ -525,6 +529,23 @@ impl TpchGeneratorBuilder {
     /// Set the CSV delimiter character (only applies to CSV format, default: ',')
     pub fn with_csv_delimiter(mut self, delimiter: char) -> Self {
         self.config.csv_delimiter = delimiter;
+        self
+    }
+
+    /// Enable GPU-accelerated Parquet writing (requires cudf feature)
+    ///
+    /// When enabled, Parquet files will be written using libcudf instead of arrow-rs,
+    /// which can provide significant speedups for large datasets (up to 5x faster).
+    ///
+    /// # Note
+    /// This option only takes effect when:
+    /// - The output format is Parquet
+    /// - The binary is compiled with the `cudf` feature enabled
+    ///
+    /// If the `cudf` feature is not enabled, this setting will be ignored and
+    /// CPU-based writing will be used.
+    pub fn with_gpu(mut self, use_gpu: bool) -> Self {
+        self.config.use_gpu = use_gpu;
         self
     }
 

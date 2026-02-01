@@ -132,6 +132,19 @@ struct Cli {
     /// Common delimiters: ',' (comma), '|' (pipe), '\t' (tab), ';' (semicolon)
     #[arg(long, default_value = ",", value_parser = parse_delimiter)]
     delimiter: char,
+
+    /// Use GPU-accelerated Parquet writing (requires cudf feature)
+    ///
+    /// When enabled, Parquet files will be written using libcudf instead of arrow-rs.
+    /// This can provide significant speedups (up to 5x) for large datasets with
+    /// large batch sizes (8M rows).
+    ///
+    /// Requires the binary to be compiled with the `cudf` feature:
+    ///   cargo build --release --features cudf
+    ///
+    /// If the feature is not enabled, this flag will be ignored.
+    #[arg(long, default_value_t = false)]
+    gpu: bool,
 }
 
 /// Parse a delimiter string, handling escape sequences
@@ -256,7 +269,8 @@ impl Cli {
             .with_parquet_compression(self.parquet_compression)
             .with_parquet_row_group_bytes(self.parquet_row_group_bytes)
             .with_stdout(self.stdout)
-            .with_csv_delimiter(self.delimiter);
+            .with_csv_delimiter(self.delimiter)
+            .with_gpu(self.gpu);
 
         // Add tables if specified
         if let Some(tables) = self.tables {
