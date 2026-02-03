@@ -38,6 +38,10 @@ Examples
 
 tpchgen-cli tbl -s 1 --output-dir=/tmp/tpch
 
+# Or without subcommand (defaults to TBL format):
+
+tpchgen-cli -s 1 --output-dir=/tmp/tpch
+
 # Generate the lineitem table at scale factor 100 in 10 Apache Parquet files to
 # /tmp/tpch/lineitem
 
