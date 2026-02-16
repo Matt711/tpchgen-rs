@@ -18,7 +18,6 @@ fn test_tpchgen_cli_tbl_scale_factor_0_001() {
     // Run the tpchgen-cli command
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--output-dir")
@@ -76,7 +75,6 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
     // First run - create the file
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--tables")
@@ -94,7 +92,6 @@ fn test_tpchgen_cli_tbl_no_overwrite() {
     // file to not be overwritten and a warning to be logged
     let output = Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--tables")
@@ -190,7 +187,6 @@ fn test_tpchgen_cli_quiet_flag() {
     // First run - create the file
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--tables")
@@ -208,7 +204,6 @@ fn test_tpchgen_cli_quiet_flag() {
     // Expect the file to not be overwritten and NO warning even though warnings show by default
     let output = Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--tables")
@@ -252,7 +247,6 @@ fn test_tpchgen_cli_parts() {
     let output_dir = temp_dir.path().to_path_buf();
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--output-dir")
@@ -284,7 +278,6 @@ fn test_tpchgen_cli_parts_explicit() {
             // output goes into `output_dir/orders/orders.{part}.tbl`
             Command::cargo_bin("tpchgen-cli")
                 .expect("Binary not found")
-                .arg("tbl")
                 .arg("--scale-factor")
                 .arg("0.001")
                 .arg("--output-dir")
@@ -315,7 +308,6 @@ fn test_tpchgen_cli_parts_all_tables() {
     let output_dir = temp_dir.path().to_path_buf();
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--scale-factor")
         .arg("0.001")
         .arg("--output-dir")
@@ -540,7 +532,6 @@ fn test_tpchgen_cli_part_no_parts() {
     // CLI Error test --part and but not --parts
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--output-dir")
         .arg(temp_dir.path())
         .arg("--part")
@@ -559,7 +550,6 @@ fn test_tpchgen_cli_too_many_parts() {
     // This should fail because --part is 42 which is more than the --parts 10
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--output-dir")
         .arg(temp_dir.path())
         .arg("--part")
@@ -579,7 +569,6 @@ fn test_tpchgen_cli_zero_part() {
 
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--output-dir")
         .arg(temp_dir.path())
         .arg("--part")
@@ -598,7 +587,6 @@ fn test_tpchgen_cli_zero_part_zero_parts() {
 
     Command::cargo_bin("tpchgen-cli")
         .expect("Binary not found")
-        .arg("tbl")
         .arg("--output-dir")
         .arg(temp_dir.path())
         .arg("--part")
