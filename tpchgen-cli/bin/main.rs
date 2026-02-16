@@ -248,6 +248,7 @@ async fn main() -> io::Result<()> {
 }
 
 impl Cli {
+    /// Main function to run the generation
     async fn main(self) -> io::Result<()> {
         match self.command {
             Some(Commands::Parquet(args)) => args.run().await,
@@ -273,6 +274,7 @@ impl Cli {
 
         configure_logging(verbose, quiet);
 
+        // Warn if parquet specific options are set but not generating parquet
         if format == OutputFormat::Parquet {
             eprintln!(
                 "Warning: Use 'tpchgen-cli parquet' subcommand instead of '--format=parquet' for better validation and control"
@@ -295,6 +297,7 @@ impl Cli {
             );
         }
 
+        // Validate delimiter usage
         if format == OutputFormat::Tbl && delimiter != ',' {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -302,10 +305,12 @@ impl Cli {
             ));
         }
 
+        // Warn if delimiter is set but not generating CSV
         if delimiter != ',' && format != OutputFormat::Csv {
             log::warn!("Delimiter option set but not generating CSV files");
         }
 
+        // Build the generator using the library API
         let mut builder = TpchGenerator::builder()
             .with_scale_factor(scale_factor)
             .with_output_dir(output_dir)
@@ -361,6 +366,7 @@ impl ParquetArgs {
 
 fn configure_logging(verbose: bool, quiet: bool) {
     if quiet {
+        // Quiet mode: only show error-level logs
         env_logger::builder()
             .filter_level(LevelFilter::Error)
             .init();
@@ -368,6 +374,7 @@ fn configure_logging(verbose: bool, quiet: bool) {
         env_logger::builder().filter_level(LevelFilter::Info).init();
         info!("Verbose output enabled (ignoring RUST_LOG environment variable)");
     } else {
+        // Default: show warnings and errors, but respect RUST_LOG if set
         env_logger::builder()
             .filter_level(LevelFilter::Warn)
             .parse_default_env()
