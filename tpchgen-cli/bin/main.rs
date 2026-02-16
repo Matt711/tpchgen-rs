@@ -120,15 +120,6 @@ struct TopLevelArgs {
     #[arg(short, long, default_value = "tbl")]
     format: OutputFormat,
 
-    /// CSV delimiter character (default: ',')
-    ///
-    /// Specifies the delimiter character to use when generating CSV files.
-    ///
-    /// Supports escape sequences: \t (tab), \n (newline), \r (carriage return), \\ (backslash)
-    /// Common delimiters: ',' (comma), '|' (pipe), '\t' (tab), ';' (semicolon)
-    #[arg(long, default_value = ",", value_parser = parse_delimiter)]
-    delimiter: char,
-
     /// Parquet block compression format (deprecated: use 'parquet' subcommand instead)
     #[arg(short = 'c', long)]
     #[deprecated]
@@ -138,6 +129,15 @@ struct TopLevelArgs {
     #[arg(long)]
     #[deprecated]
     parquet_row_group_bytes: Option<i64>,
+
+    /// CSV delimiter character (default: ',')
+    ///
+    /// Specifies the delimiter character to use when generating CSV files.
+    ///
+    /// Supports escape sequences: \t (tab), \n (newline), \r (carriage return), \\ (backslash)
+    /// Common delimiters: ',' (comma), '|' (pipe), '\t' (tab), ';' (semicolon)
+    #[arg(long, default_value = ",", value_parser = parse_delimiter)]
+    delimiter: char,
 }
 
 #[derive(clap::Args)]
